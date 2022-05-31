@@ -14,5 +14,5 @@ data/
 *.zip
 *.tar
 *.tar.gz
-
+.idea
 

@@ -1,4 +1,5 @@
 import datetime
+
 from tqdm import tqdm
 
 import efinance as ef
@@ -83,11 +84,45 @@ def strategy_01(_stocks):
     return matched
 
 
+def str_of_num(num):
+    """
+    递归实现，精确为最大单位值 + 小数点后三位
+    Parameters
+    ----------
+    num
+
+    Returns
+    -------
+
+    """
+
+    def strofsize(num, level):
+        if level >= 2:
+            return num, level
+        elif num >= 10000:
+            num /= 10000
+            level += 1
+            return strofsize(num, level)
+        else:
+            return num, level
+
+    units = ['', '万', '亿']
+    num, level = strofsize(num, 0)
+    if level > len(units):
+        level -= 1
+    return '{}{}'.format(round(num, 3), units[level])
+
+
 if __name__ == '__main__':
     all_stock = ef.stock.get_realtime_quotes('沪深A股')
     matched_stock = strategy_01(all_stock)
     print("=======")
     print('len:', len(matched_stock), matched_stock)
+
+    base_info = ef.stock.get_base_info(matched_stock)
+    # print(ma)
+    for sto in base_info.itertuples():
+        print(getattr(sto, '股票代码'), getattr(sto, '股票名称'), str_of_num(getattr(sto, '总市值')))
 
     # today = datetime.datetime.now().strftime('%Y%m%d')
     # print(volume_bigger_in5('688120',today,1))

@@ -49,3 +49,30 @@ def smooth_rsi(t, n, is0=False):
     t_rsi = [round(e_temp, 2) if e_temp != np.inf and not np.isnan(e_temp) else 0
              for e_temp in np.divide(divisor, dividend, out=np.zeros_like(divisor), where=dividend != 0)]
     return t_rsi
+
+
+def cur_rsi(_code, _k):
+    """
+    根据日线计算rsi值
+    Parameters
+    ----------
+    _code 股票代码(只用做异常时打印 传None也可)
+    _day_k 股票k线
+
+    Returns
+    -------
+
+    """
+    _rsi = [0, 0]
+    _256_k = _k['收盘'][-256:]
+    try:
+        if len(_256_k) == 0:
+            return _rsi
+        elif len(_256_k) > 255:
+            _rsi = smooth_rsi(_256_k, 28)
+        else:
+            _rsi = smooth_rsi(_256_k, 28, True)
+    except Exception as e:
+        print("exception: ", _code, e)
+        pass
+    return _rsi

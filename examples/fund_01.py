@@ -10,46 +10,23 @@ from efinance.utils import notify
 from efinance.utils import rsi
 
 
-def get_etf_dict_list(_etf_dict):
-    return [str(_etf_dict['code']), str(_etf_dict['name']), str(_etf_dict['type_name']), str(_etf_dict['org_name']),
-            str(_etf_dict['rsi'])]
-
-
-def cur_rsi(_code):
-    _rsi = [0, 0]
-    day_k = ef.stock.get_quote_history(_code)
-    day_256_k = day_k['收盘'][-256:]
-    try:
-        if len(day_256_k) == 0:
-            return _rsi
-        elif len(day_256_k) > 255:
-            _rsi = rsi.smooth_rsi(day_256_k, 28)
-        else:
-            _rsi = rsi.smooth_rsi(day_256_k, 28, True)
-    except Exception as e:
-        print("exception", _code)
-        pass
-        return _rsi
-    return _rsi
-
-
-def below_rsi(etf_dict, max_rsi):
-    _rsi = cur_rsi(etf_dict['code'])
-    print(etf_dict['code'], etf_dict['name'], _rsi[-2:])
+def strategy_below_rsi(fund_series, max_rsi):
+    day_k = ef.stock.get_quote_history(fund_series[0])
+    _rsi = rsi.cur_rsi(fund_series[0], day_k)
+    print(fund_series[0], fund_series[1], _rsi[-2:])
 
     if 0 < _rsi[-1] < max_rsi:
-        etf_dict['rsi'] = _rsi[-1]
-        return ", ".join(get_etf_dict_list(etf_dict)) + "\n"
+        return ", ".join([str(fund_series[0]), str(fund_series[1]), str(_rsi[-1])]) + "\n"
     return None
 
 
-def multi_process_match_rsi(funds_dict, rsi):
+def multi_process_match_rsi(_funds, _rsi):
     start_t = datetime.datetime.now()
     _num_cores = int(mp.cpu_count())
-    print("use {} cpu calculate etf's rsi below {}".format(_num_cores, rsi))
+    print("use {} cpu calculate etf's rsi below {}".format(_num_cores, _rsi))
 
     pool = mp.Pool(_num_cores)
-    results = [pool.apply_async(below_rsi, args=(fund, rsi)) for fund in funds_dict]
+    results = [pool.apply_async(strategy_below_rsi, args=(_funds.iloc[i, :], _rsi)) for i in range(len(_funds.index))]
     results = [p.get() for p in results]
 
     end_t = datetime.datetime.now()
@@ -82,7 +59,4 @@ def run_by_config():
 
 
 if __name__ == '__main__':
-    # run_by_config()
-    all_funds = ef.fund.get_fund_codes(ft='etf')
-    for co in all_funds:
-        print(co)
+    run_by_config()

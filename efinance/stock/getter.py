@@ -85,7 +85,7 @@ def get_base_info_muliti(stock_codes: List[str]) -> pd.DataFrame:
         start(stock_code)
     multitasking.wait_for_tasks()
     df = pd.DataFrame(dfs)
-    df = df.dropna(subset=['股票代码'])
+    df = df.dropna(subset=['代码'])
     return df
 
 
